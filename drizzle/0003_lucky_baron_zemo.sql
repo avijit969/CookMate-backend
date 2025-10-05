@@ -1,0 +1,1 @@
+ALTER TABLE "recipe" ALTER COLUMN "instructions" SET DATA TYPE text[];
