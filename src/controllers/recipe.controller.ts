@@ -1,8 +1,9 @@
 import { Context } from "hono";
 import db from "../db";
-import { ingredient, recipe } from "../db/schema";
+import { ingredient, recipe, user } from "../db/schema";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { createClient } from "redis";
+import { count } from "drizzle-orm";
 
 // Initialize Redis client once
 const client = createClient();
@@ -117,4 +118,63 @@ export const getRecipeById = async (c: Context) => {
   }
 };
 
-export { createRecipe };
+const getAllRecipes = async (c: Context) => {
+  try {
+    // Parse pagination params
+    const { page = "1", limit = "10" } = c.req.query();
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Check Redis cache first
+    const cacheKey = `all_recipes:${pageNum}:${limitNum}`;
+    const cachedData = await client.get(cacheKey);
+
+    if (cachedData) {
+      console.log("✅ Serving from cache");
+      return c.json(JSON.parse(cachedData), 200);
+    }
+
+    // Count total recipes
+    const countResult = await db
+      .select({ value: count() })
+      .from(recipe)
+      .execute();
+    const totalCount = Number(countResult[0]?.value || 0);
+
+    // Fetch paginated recipes with relations
+    const recipes = await db.query.recipe.findMany({
+      with: {
+        ingredients: true,
+        createdBy: {
+          columns: { name: true, email: true, avatar: true },
+        },
+      },
+      limit: limitNum,
+      offset,
+    });
+
+    const hasNextPage = offset + recipes.length < totalCount;
+
+    const responseData = {
+      page: pageNum,
+      limit: limitNum,
+      count: totalCount,
+      hasNextPage,
+      recipes,
+    };
+
+    // Cache the response (for 5 minutes)
+    await client.setEx(cacheKey, 300, JSON.stringify(responseData));
+
+    return c.json(responseData, 200);
+  } catch (error: any) {
+    console.error("Error fetching recipes:", error);
+    return c.json(
+      { message: "Internal Server Error", error: error.message },
+      500
+    );
+  }
+};
+
+export { createRecipe, getAllRecipes };

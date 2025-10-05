@@ -38,6 +38,17 @@ export const recipeRelations = relations(recipe, ({ many }) => ({
   ingredients: many(ingredient),
 }));
 
+export const userRelations = relations(user, ({ many }) => ({
+  recipes: many(recipe),
+}));
+
+export const recipeRelations2 = relations(recipe, ({ one }) => ({
+  createdBy: one(user, {
+    fields: [recipe.userId],
+    references: [user.id],
+  }),
+}));
+
 export const ingredientRelations = relations(ingredient, ({ one }) => ({
   recipe: one(recipe, {
     fields: [ingredient.recipeId],
