@@ -2,23 +2,8 @@ import { Context } from "hono";
 import db from "../db";
 import { ingredient, recipe, user } from "../db/schema";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
-import { createClient } from "redis";
+import redisClinet from "../helper/redis";
 import { count } from "drizzle-orm";
-
-// Initialize Redis client once
-const client = createClient();
-
-client.on("error", (err) => console.log("Redis Client Error", err));
-
-// Connect once when module loads
-(async () => {
-  try {
-    await client.connect();
-    console.log("Redis connected");
-  } catch (err) {
-    console.error("Redis connection failed:", err);
-  }
-})();
 
 const createRecipe = async (c: Context) => {
   try {
@@ -58,7 +43,7 @@ const createRecipe = async (c: Context) => {
     await db.insert(ingredient).values(addIngredients).execute();
 
     // Cache the new recipe immediately
-    await client.setEx(
+    await redisClinet.setEx(
       `recipe:${newRecipe[0].id}`,
       3600,
       JSON.stringify({
@@ -66,7 +51,6 @@ const createRecipe = async (c: Context) => {
         ingredients: addIngredients,
       })
     );
-
     return c.json(
       { message: "Recipe created successfully", recipe: newRecipe[0] },
       201
@@ -88,7 +72,7 @@ export const getRecipeById = async (c: Context) => {
 
   try {
     //    Check Redis cache first
-    const cachedRecipe = await client.get(`recipe:${id}`);
+    const cachedRecipe = await redisClinet.get(`recipe:${id}`);
     if (cachedRecipe) {
       console.log("Serving from cache");
       return c.json({ recipe: JSON.parse(cachedRecipe) }, 200);
@@ -106,7 +90,7 @@ export const getRecipeById = async (c: Context) => {
       return c.json({ error: "Recipe not found" }, 404);
     }
 
-    await client.setEx(`recipe:${id}`, 100, JSON.stringify(foundRecipe));
+    await redisClinet.setEx(`recipe:${id}`, 100, JSON.stringify(foundRecipe));
 
     return c.json({ recipe: foundRecipe }, 200);
   } catch (err: any) {
@@ -128,7 +112,7 @@ const getAllRecipes = async (c: Context) => {
 
     // Check Redis cache first
     const cacheKey = `all_recipes:${pageNum}:${limitNum}`;
-    const cachedData = await client.get(cacheKey);
+    const cachedData = await redisClinet.get(cacheKey);
 
     if (cachedData) {
       console.log("✅ Serving from cache");
@@ -165,7 +149,7 @@ const getAllRecipes = async (c: Context) => {
     };
 
     // Cache the response (for 5 minutes)
-    await client.setEx(cacheKey, 300, JSON.stringify(responseData));
+    await redisClinet.setEx(cacheKey, 300, JSON.stringify(responseData));
 
     return c.json(responseData, 200);
   } catch (error: any) {
