@@ -15,6 +15,20 @@
       "when": 1768276592208,
       "tag": "0001_famous_tusk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768318214061,
+      "tag": "0002_nappy_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768318376843,
+      "tag": "0003_eminent_junta",
+      "breakpoints": true
     }
   ]
 }

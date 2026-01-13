@@ -13,7 +13,16 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
+export const logged_in_device = pgTable("logged_in_device",{
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("user_id")
+  .references(()=>user.id)
+  .notNull(),
+  deviceName: text("device_name").notNull(),
+  expo_push_token: text("expo_push_token").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})
 export const recipe = pgTable("recipe", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   userId: uuid("user_id").notNull(),
@@ -58,3 +67,11 @@ export const ingredientRelations = relations(ingredient, ({ one }) => ({
     references: [recipe.id],
   }),
 }));
+
+export const logged_in_deviceRelations = relations(logged_in_device,({one,many})=>({
+  user:one(user,{
+    fields:[logged_in_device.userId],
+    references:[user.id]
+  }),
+  devices:many(user)
+}))
