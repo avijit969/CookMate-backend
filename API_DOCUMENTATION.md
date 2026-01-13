@@ -1,0 +1,210 @@
+# API Documentation
+
+## User Routes
+Base URL: `/api/users` (Assumed)
+
+### 1. Get Authenticated User
+Retrieves the authenticated user.
+
+- **URL**: `GET /`
+- **Authentication**: Required (Cookie/Token)
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "id": "uuid",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "avatar": "url"
+    }
+    ```
+  - `401 Unauthorized`: Invalid credentials.
+  - `500 Internal Server Error`
+
+### 2. Create User (Register)
+Registers a new user.
+
+- **URL**: `POST /`
+- **Body** (JSON):
+  ```json
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "securepassword"
+  }
+  ```
+- **Response**:
+  - `201 Created`:
+    ```json
+    {
+      "message": "User created successfully",
+      "user": {
+        "id": "uuid",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "createdAt": "timestamp"
+      }
+    }
+    ```
+  - `400 Bad Request`: If fields are missing (`All fields are required`) or user already exists (`User already exist`).
+  - `500 Internal Server Error`
+
+### 3. Login User
+Authenticates a user and sets a session cookie.
+
+- **URL**: `POST /login`
+- **Body** (JSON):
+  ```json
+  {
+    "email": "john@example.com",
+    "password": "securepassword"
+  }
+  ```
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "User logged in successfully",
+      "accessToken": "jwt_token_here"
+    }
+    ```
+    *Note: Also sets a `token` cookie (HTTPOnly, Secure).*
+  - `400 Bad Request`: If email or password missing.
+  - `404 Not Found`: User not found.
+  - `401 Unauthorized`: Invalid credentials.
+  - `500 Internal Server Error`
+
+### 4. Logout User
+Logs out the current user by clearing the session cookie.
+
+- **URL**: `POST /logout`
+- **Authentication**: Required
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "User logged out successfully"
+    }
+    ```
+
+---
+
+## Recipe Routes
+Base URL: `/api/recipes` (Assumed)
+
+### 1. Create Recipe
+Creates a new recipe.
+
+- **URL**: `POST /`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "title": "Pasta Carbonara",
+    "description": "A classic Italian pasta dish.",
+    "instructions": "1. Boil pasta. 2. Cook pancetta...",
+    "ingredients": [
+      {
+        "name": "Spaghetti",
+        "type": "Grains",
+        "quantity": "500",
+        "unit": "g"
+      },
+      {
+        "name": "Eggs",
+        "type": "Dairy",
+        "quantity": "3",
+        "unit": "pcs"
+      }
+    ]
+  }
+  ```
+- **Response**:
+  - `201 Created`:
+    ```json
+    {
+      "message": "Recipe created successfully",
+      "recipe": {
+        "id": "uuid",
+        "title": "Pasta Carbonara"
+      }
+    }
+    ```
+  - `400 Bad Request`: If title, ingredients, or instructions are missing.
+  - `500 Internal Server Error`
+
+### 2. Get Recipe by ID
+Retrieves details of a specific recipe. Redis caching is implemented for performance.
+
+- **URL**: `GET /:id`
+- **Request Parameters**:
+  - `id`: The UUID of the recipe.
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "recipe": {
+        "id": "uuid",
+        "title": "Pasta Carbonara",
+        "description": "...",
+        "instructions": "...",
+        "ingredients": [ ... ]
+      }
+    }
+    ```
+  - `404 Not Found`: Recipe not found.
+  - `500 Internal Server Error`
+
+### 3. Get All Recipes
+Retrieves a paginated list of recipes. Redis caching is implemented for performance.
+
+- **URL**: `GET /`
+- **Query Parameters**:
+  - `page` (optional): Page number (default: 1).
+  - `limit` (optional): Number of items per page (default: 10).
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "page": 1,
+      "limit": 10,
+      "count": 100,
+      "hasNextPage": true,
+      "recipes": [
+        {
+          "id": "uuid",
+          "title": "Pasta Carbonara",
+          "createdBy": {
+             "name": "John Doe",
+             "email": "john@example.com",
+             "avatar": "url"
+          },
+          "ingredients": [ ... ]
+        }
+      ]
+    }
+    ```
+  - `500 Internal Server Error`
+
+---
+
+## Upload Routes
+Base URL: `/api/upload`
+
+### 1. Upload Image
+Uploads an image file to Cloudflare R2.
+
+- **URL**: `POST /`
+- **Authentication**: Required
+- **Body** (Multipart Form Data):
+  - `file`: The image file to upload.
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Image uploaded successfully",
+      "url": "filename-or-public-url"
+    }
+    ```
+  - `400 Bad Request`: If "file" is missing.
+  - `500 Internal Server Error`: For S3/R2 errors.

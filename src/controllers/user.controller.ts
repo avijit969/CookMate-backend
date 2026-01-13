@@ -6,10 +6,24 @@ import { hashPassword } from "../helper/hashPassword";
 import { verifyHashPassword } from "../helper/verifyHashPassword";
 import { generateAccessToken } from "../helper/generateAccessToken";
 import { deleteCookie, setCookie } from "hono/cookie";
-const getAllUsers = async (c: Context) => {
-  const users = await db.select().from(user);
-  return c.json(users);
+
+// get authenticated user details
+const getUser = async (c: Context) => {
+  const userId = c.get("user").id;
+  const dbUser = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+    })
+    .from(user)
+    .where(eq(user.id, userId))
+    .execute();
+  return c.json(dbUser[0]);
 };
+
+// create new user
 const createUser = async (c: Context) => {
   try {
     const { name, email, password } = await c.req.json();
@@ -49,6 +63,8 @@ const createUser = async (c: Context) => {
     );
   }
 };
+
+// login user and give access token
 const loginUser = async (c: Context) => {
   try {
     const { email, password } = await c.req.json();
@@ -88,8 +104,38 @@ const loginUser = async (c: Context) => {
     );
   }
 };
+
+// logout user and delete access token
 const logoutUser = async (c: Context) => {
   deleteCookie(c, "token");
   return c.json({ message: "User logged out successfully" }, 200);
 };
-export { getAllUsers, createUser, loginUser, logoutUser };
+
+// update the user avatar
+const updateUserDetails = async (c: Context) => {
+  try {
+    const { name, avatar } = await c.req.json();
+    console.log(name, avatar);
+    if (!name && !avatar) {
+      return c.json({ message: "Name or avatar is required" }, 400);
+    }
+    const userId = c.get("user").id;
+    const updatedUser = await db
+      .update(user)
+      .set({ name, avatar })
+      .where(eq(user.id, userId))
+      .returning({
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+      })
+      .execute();
+    return c.json({ message: "User updated successfully", user: updatedUser[0] }, 200);
+  } catch (error: any) {
+    return c.json(
+      { message: "Internal Server Error", error: error.message },
+      500
+    );
+  }
+};
+export { getUser, createUser, loginUser, logoutUser, updateUserDetails };
