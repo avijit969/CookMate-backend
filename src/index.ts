@@ -6,6 +6,8 @@ import uploadRouter from "./routes/upload.routes";
 import redisClinet from "./helper/redis";
 import { welcomeHtmlTemplate } from "./templates/welcome";
 import loggedInDeviceRoutes from "./routes/device.routes";
+import { readFile } from "node:fs/promises";
+import { docsHtml } from "./templates/docs";
 const app = new Hono();
 
 app.use(logger());
@@ -16,6 +18,16 @@ app.get("/", (c) => {
 // health check route
 app.get("/api/health", (c) => {
   return c.json({ message: "Everything run smoothly 😊" }, 200);
+});
+
+// docs route
+app.get("/docs", async (c) => {
+  try {
+    const mdContent = await readFile("API_DOCUMENTATION.md", "utf-8");
+    return c.html(docsHtml(mdContent));
+  } catch (error) {
+    return c.text("Failed to load documentation: " + error, 500);
+  }
 });
 
 

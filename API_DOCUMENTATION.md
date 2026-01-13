@@ -330,3 +330,85 @@ Uploads an image file to Cloudflare R2.
     ```
   - `400 Bad Request`: If "file" is missing.
   - `500 Internal Server Error`: For S3/R2 errors.
+
+---
+
+## Logged In Device Routes
+Base URL: `/api/logged-in-devices`
+
+### 1. Add Logged In Device
+Registers a new device for push notifications.
+
+- **URL**: `POST /`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "deviceName": "My iPhone",
+    "expoPushToken": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+  }
+  ```
+- **Response**:
+  - `201 Created`:
+    ```json
+    {
+      "message": "Device saved successfully",
+      "data": [
+        {
+          "id": "uuid",
+          "userId": "uuid",
+          "deviceName": "My iPhone",
+          "expo_push_token": "ExponentPushToken[...]",
+          "createdAt": "...",
+          "updatedAt": "..."
+        }
+      ]
+    }
+    ```
+  - `400 Bad Request`: If device already exists or fields are missing.
+  - `500 Internal Server Error`
+
+### 2. Get Logged In Devices
+Retrieves all logged-in devices for the authenticated user.
+
+- **URL**: `GET /`
+- **Authentication**: Required
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Devices fetched successfully",
+      "data": [
+        {
+          "id": "uuid",
+          "userId": "uuid",
+          "deviceName": "My iPhone",
+          "expo_push_token": "ExponentPushToken[...]"
+        }
+      ]
+    }
+    ```
+  - `500 Internal Server Error`
+
+### 3. Remove Logged In Device
+Removes a logged-in device.
+
+- **URL**: `DELETE /`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "deviceName": "My iPhone"
+  }
+  ```
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Device deleted successfully",
+      "data": [ { ... } ]
+    }
+    ```
+  - `400 Bad Request`: If `deviceName` is missing.
+  - `404 Not Found`: Device not found.
+  - `500 Internal Server Error`
