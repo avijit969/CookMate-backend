@@ -6,6 +6,7 @@ import uploadRouter from "./routes/upload.routes";
 import redisClinet from "./helper/redis";
 import { welcomeHtmlTemplate } from "./templates/welcome";
 import loggedInDeviceRoutes from "./routes/device.routes";
+import interactionRouter from "./routes/interaction.routes";
 import { readFile } from "node:fs/promises";
 import { docsHtml } from "./templates/docs";
 const app = new Hono();
@@ -36,6 +37,7 @@ app.route("/api/users", userRouter);
 app.route("/api/recipes", recipeRouter);
 app.route("/api/upload", uploadRouter);
 app.route("/api/logged-in-devices", loggedInDeviceRoutes);
+app.route("/api/interactions", interactionRouter);
 
 
 // cache clear route

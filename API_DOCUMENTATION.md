@@ -412,3 +412,168 @@ Removes a logged-in device.
   - `400 Bad Request`: If `deviceName` is missing.
   - `404 Not Found`: Device not found.
   - `500 Internal Server Error`
+
+---
+
+## Interaction Routes
+Base URL: `/api/interactions`
+
+### 1. Toggle Like
+Likes or unlikes a recipe.
+
+- **URL**: `POST /like`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "recipeId": "uuid"
+  }
+  ```
+- **Response**:
+  - `201 Created`: Recipe liked.
+    ```json
+    {
+      "message": "Recipe liked successfully",
+      "liked": true
+    }
+    ```
+  - `200 OK`: Recipe unliked.
+    ```json
+    {
+      "message": "Recipe unliked successfully",
+      "liked": false
+    }
+    ```
+  - `400 Bad Request`: Missing `recipeId`.
+  - `500 Internal Server Error`
+
+### 2. Get Recipe Likes
+Gets the total like count for a recipe.
+
+- **URL**: `GET /like/:recipeId`
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "count": 42
+    }
+    ```
+  - `500 Internal Server Error`
+
+### 3. Add Comment
+Adds a new comment to a recipe.
+
+- **URL**: `POST /comment`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "recipeId": "uuid",
+    "content": "This looks delicious!"
+  }
+  ```
+- **Response**:
+  - `201 Created`:
+    ```json
+    {
+      "message": "Comment added successfully",
+      "comment": {
+        "id": "uuid",
+        "content": "This looks delicious!",
+        "createdAt": "timestamp"
+      }
+    }
+    ```
+  - `400 Bad Request`: Missing fields.
+  - `500 Internal Server Error`
+
+### 4. Get Recipe Comments
+Retrieves all comments for a specific recipe.
+
+- **URL**: `GET /comment/:recipeId`
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "comments": [
+        {
+          "id": "uuid",
+          "content": "Great recipe!",
+          "user": {
+            "name": "Jane Doe",
+            "avatar": "url"
+          },
+          "createdAt": "timestamp"
+        }
+      ]
+    }
+    ```
+  - `500 Internal Server Error`
+
+### 5. Delete Comment
+Deletes a comment. User must be the owner.
+
+- **URL**: `DELETE /comment/:commentId`
+- **Authentication**: Required
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Comment deleted successfully"
+    }
+    ```
+  - `403 Forbidden`: Unauthorized to delete.
+  - `404 Not Found`: Comment not found.
+  - `500 Internal Server Error`
+
+### 6. Toggle Save
+Saves or unsaves a recipe for the authenticated user.
+
+- **URL**: `POST /save`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "recipeId": "uuid"
+  }
+  ```
+- **Response**:
+  - `201 Created`: Recipe saved.
+    ```json
+    {
+      "message": "Recipe saved successfully",
+      "saved": true
+    }
+    ```
+  - `200 OK`: Recipe removed from saved.
+    ```json
+    {
+      "message": "Recipe removed from saved",
+      "saved": false
+    }
+    ```
+  - `400 Bad Request`: Missing `recipeId`.
+  - `500 Internal Server Error`
+
+### 7. Get Saved Recipes
+Retrieves all recipes saved by the authenticated user.
+
+- **URL**: `GET /save`
+- **Authentication**: Required
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "recipes": [
+        {
+            "id": "uuid",
+            "title": "Pasta Carbonara",
+            "createdBy": {
+                "name": "John Doe",
+                "avatar": "url"
+            }
+        }
+      ]
+    }
+    ```
+  - `500 Internal Server Error`

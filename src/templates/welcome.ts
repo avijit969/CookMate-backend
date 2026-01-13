@@ -115,6 +115,8 @@ export const welcomeHtmlTemplate = `
 
         <br>
         <a href="/api/health" class="api-link">Check Health Status &rarr;</a>
+        <br>
+        <a href="/docs" class="api-link">View API Documentation &rarr;</a>
     </div>
 </body>
 </html>
