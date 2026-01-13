@@ -1,6 +1,6 @@
 {
-  "id": "8fcf4f79-c120-4563-9756-c94e5d464fdb",
-  "prevId": "490524d5-6d37-4727-9052-a18a077b50cf",
+  "id": "dca2acb4-041c-45b7-ace6-9e572c9570ca",
+  "prevId": "093ae5fc-a250-4842-8b10-24bd5c84b139",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -14,6 +14,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "recipe_id": {
+          "name": "recipe_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "name": {
           "name": "name",
@@ -91,15 +97,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "ingredients": {
-          "name": "ingredients",
-          "type": "uuid",
+        "image": {
+          "name": "image",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "instructions": {
           "name": "instructions",
-          "type": "text",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": true
         },
@@ -119,21 +125,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "recipe_ingredients_ingredient_id_fk": {
-          "name": "recipe_ingredients_ingredient_id_fk",
-          "tableFrom": "recipe",
-          "tableTo": "ingredient",
-          "columnsFrom": [
-            "ingredients"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -171,6 +163,19 @@
         },
         "avatar": {
           "name": "avatar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_verified": {
+          "name": "is_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "verification_code": {
+          "name": "verification_code",
           "type": "text",
           "primaryKey": false,
           "notNull": false

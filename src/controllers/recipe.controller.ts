@@ -5,9 +5,10 @@ import { eq } from "drizzle-orm/sql/expressions/conditions";
 import redisClinet from "../helper/redis";
 import { count } from "drizzle-orm";
 
+// create new recipe
 const createRecipe = async (c: Context) => {
   try {
-    const { title, ingredients, instructions, description } =
+    const { title, ingredients, instructions, description ,image} =
       await c.req.json();
     if (!title || !ingredients || !instructions) {
       return c.json(
@@ -24,7 +25,7 @@ const createRecipe = async (c: Context) => {
 
     const newRecipe = await db
       .insert(recipe)
-      .values({ title, userId, instructions, description })
+      .values({ title, userId, instructions, description ,image })
       .returning({
         id: recipe.id,
         title: recipe.title,
@@ -63,6 +64,7 @@ const createRecipe = async (c: Context) => {
   }
 };
 
+// get recipe by id with cache
 export const getRecipeById = async (c: Context) => {
   const { id } = c.req.param();
 
@@ -102,6 +104,7 @@ export const getRecipeById = async (c: Context) => {
   }
 };
 
+// get all recipes with cache
 const getAllRecipes = async (c: Context) => {
   try {
     // Parse pagination params

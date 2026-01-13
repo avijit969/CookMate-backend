@@ -42,14 +42,37 @@ Registers a new user.
         "id": "uuid",
         "name": "John Doe",
         "email": "john@example.com",
+        "isVerified": false,
         "createdAt": "timestamp"
       }
     }
     ```
+    *Note: An email with a 6-digit verification code is sent to the user.*
   - `400 Bad Request`: If fields are missing (`All fields are required`) or user already exists (`User already exist`).
   - `500 Internal Server Error`
 
-### 3. Login User
+### 3. Verify User (Email Verification)
+Verifies a user account using the 6-digit code sent via email.
+
+- **URL**: `POST /verify`
+- **Body** (JSON):
+  ```json
+  {
+    "token": "123456"
+  }
+  ```
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Account verified successfully!"
+    }
+    ```
+    *Note: A welcome email is sent upon successful verification.*
+  - `400 Bad Request`: Invalid or expired token/code.
+  - `500 Internal Server Error`
+
+### 4. Login User
 Authenticates a user and sets a session cookie.
 
 - **URL**: `POST /login`
@@ -74,7 +97,7 @@ Authenticates a user and sets a session cookie.
   - `401 Unauthorized`: Invalid credentials.
   - `500 Internal Server Error`
 
-### 4. Logout User
+### 5. Logout User
 Logs out the current user by clearing the session cookie.
 
 - **URL**: `POST /logout`

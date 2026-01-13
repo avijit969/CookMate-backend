@@ -6,6 +6,8 @@ import { hashPassword } from "../helper/hashPassword";
 import { verifyHashPassword } from "../helper/verifyHashPassword";
 import { generateAccessToken } from "../helper/generateAccessToken";
 import { deleteCookie, setCookie } from "hono/cookie";
+import { sendEmail } from "../helper/resend";
+import { getVerificationEmailTemplate, getWelcomeEmailTemplate } from "../helper/emails";
 
 // get authenticated user details
 const getUser = async (c: Context) => {
@@ -40,10 +42,19 @@ const createUser = async (c: Context) => {
       return c.json({ message: "User already exist" }, 400);
     }
     const hashedPassword = await hashPassword(password);
+    
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const newUser = await db
       .insert(user)
-      .values({ name, email, password: hashedPassword })
+      .values({ 
+        name, 
+        email, 
+        password: hashedPassword,
+        verificationCode,
+        isVerified: false
+      })
       .returning({
         id: user.id,
         name: user.name,
@@ -52,10 +63,56 @@ const createUser = async (c: Context) => {
       })
       .execute();
 
+    // Send Verification Email
+    const emailHtml = getVerificationEmailTemplate(name, verificationCode);
+    
+    // Fire and forget email sending (or await if critical)
+    sendEmail(email, "Your CookMate Verification Code", emailHtml).catch(err => console.error("Failed to send verification email", err));
+
     return c.json(
-      { message: "User created successfully", user: newUser[0] },
+      { message: "User created successfully. Please check your email for the verification code.", user: newUser[0] },
       201
     );
+  } catch (error: any) {
+    return c.json(
+      { message: "Internal Server Error", error: error.message },
+      500
+    );
+  }
+};
+
+const verifyUser = async (c: Context) => {
+  try {
+    const { token } = await c.req.json();
+    if (!token) {
+      return c.json({ error: "Verification token is required" }, 400);
+    }
+
+    const userToVerify = await db
+      .select()
+      .from(user)
+      .where(eq(user.verificationCode, token))
+      .execute();
+
+    if (!userToVerify.length) {
+      return c.json({ error: "Invalid or expired verification token" }, 400);
+    }
+
+    const verifiedUser = userToVerify[0];
+
+    // Update user to verified
+    await db
+      .update(user)
+      .set({ isVerified: true, verificationCode: null }) // Clear code
+      .where(eq(user.id, verifiedUser.id))
+      .execute();
+
+    // Send Welcome Email
+    const welcomeHtml = getWelcomeEmailTemplate(verifiedUser.name);
+    sendEmail(verifiedUser.email, "Welcome to CookMate!", welcomeHtml).catch(err => console.error("Failed to send welcome email", err));
+
+    return c.json({ message: "Account verified successfully!" }, 200);
+
   } catch (error: any) {
     return c.json(
       { message: "Internal Server Error", error: error.message },
@@ -138,4 +195,4 @@ const updateUserDetails = async (c: Context) => {
     );
   }
 };
-export { getUser, createUser, loginUser, logoutUser, updateUserDetails };
+export { getUser, createUser, loginUser, logoutUser, updateUserDetails, verifyUser };
