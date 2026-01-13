@@ -1,8 +1,9 @@
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
 import { logger } from "hono/logger";
 import userRouter from "./routes/user.routes";
 import recipeRouter from "./routes/recipe.routes";
 import uploadRouter from "./routes/upload.routes";
+import redisClinet from "./helper/redis";
 const app = new Hono();
 
 app.use(logger());
@@ -15,4 +16,8 @@ app.get("/api/health", (c) => {
 app.route("/api/users", userRouter);
 app.route("/api/recipes", recipeRouter);
 app.route("/api/upload", uploadRouter);
+app.get("/api/rest-cache", (c : Context)=>{
+  redisClinet.flushAll();
+  return c.json({ message: "Rest cache cleared successfully" }, 200);
+});
 export default app;

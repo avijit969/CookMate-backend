@@ -1,7 +1,7 @@
 # API Documentation
 
 ## User Routes
-Base URL: `/api/users` (Assumed)
+Base URL: `/api/users`
 
 ### 1. Get Authenticated User
 Retrieves the authenticated user.
@@ -109,11 +109,38 @@ Logs out the current user by clearing the session cookie.
       "message": "User logged out successfully"
     }
     ```
+  
+### 6. Update User Details
+Updates the authenticated user's profile (name, avatar).
+
+- **URL**: `PUT /`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "name": "Jane Doe",
+    "avatar": "https://pub-r2.com/new-avatar.jpg"
+  }
+  ```
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "User updated successfully",
+      "user": {
+        "id": "uuid",
+        "name": "Jane Doe",
+        "avatar": "https://pub-r2.com/new-avatar.jpg"
+      }
+    }
+    ```
+  - `400 Bad Request`: If name or avatar is missing.
+  - `500 Internal Server Error`
 
 ---
 
 ## Recipe Routes
-Base URL: `/api/recipes` (Assumed)
+Base URL: `/api/recipes`
 
 ### 1. Create Recipe
 Creates a new recipe.
@@ -126,6 +153,7 @@ Creates a new recipe.
     "title": "Pasta Carbonara",
     "description": "A classic Italian pasta dish.",
     "instructions": "1. Boil pasta. 2. Cook pancetta...",
+    "image": "https://pub-r2.com/recipe-image.jpg",
     "ingredients": [
       {
         "name": "Spaghetti",

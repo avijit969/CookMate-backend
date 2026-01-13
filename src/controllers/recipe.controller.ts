@@ -1,7 +1,7 @@
 import { Context } from "hono";
 import db from "../db";
 import { ingredient, recipe, user } from "../db/schema";
-import { eq } from "drizzle-orm/sql/expressions/conditions";
+import { eq, ilike, like } from "drizzle-orm/sql/expressions/conditions";
 import redisClinet from "../helper/redis";
 import { count } from "drizzle-orm";
 
@@ -67,7 +67,7 @@ const createRecipe = async (c: Context) => {
 // get recipe by id with cache
 export const getRecipeById = async (c: Context) => {
   const { id } = c.req.param();
-
+  console.log(id)
   if (!id) {
     return c.json({ error: "Recipe ID is required" }, 400);
   }
@@ -164,4 +164,100 @@ const getAllRecipes = async (c: Context) => {
   }
 };
 
-export { createRecipe, getAllRecipes };
+const deleteRecipeByID = async(c:Context)=>{
+  const {id} = c.req.param();
+  const userId = c.get("user").id;
+
+  const recipeDb = await db.query.recipe.findFirst({
+    where: eq(recipe.id, id),
+    with: {
+      createdBy: true,
+    },
+  });
+
+  if (!recipeDb) {
+    return c.json({ error: "Recipe not found" }, 404);
+  }
+
+  if (recipeDb?.userId !== userId) {
+    return c.json({ error: "You are not authorized to delete this recipe" }, 401);
+  }
+
+  await db.delete(recipe).where(eq(recipe.id, id)).execute();
+
+  // delete recipe from cache
+  await redisClinet.del(`recipe:${id}`);
+
+  return c.json({ message: "Recipe deleted successfully" }, 200);
+}
+
+// get the recipe by name
+const getRecipeByName = async (c:Context)=>{
+  const {name} = c.req.param();
+  console.log(name)
+
+  // get recipe from cache
+  const cachedRecipe = await redisClinet.get(`recipe:${name}`);
+  if (cachedRecipe) {
+    console.log("✅ Serving from cache");
+    return c.json(JSON.parse(cachedRecipe), 200);
+  }
+
+  const recipeDb = await db.query.recipe.findFirst({
+    where: ilike(recipe.title, `%${name}%`),
+    with: {
+      ingredients: true,
+      createdBy: {
+        columns: { name: true, email: true, avatar: true },
+      },
+    },
+  });
+
+  console.log(recipeDb)
+  // set recipe to cache
+  await redisClinet.setEx(`recipe:${name}`, 300, JSON.stringify(recipeDb));
+  if (!recipeDb) {
+    return c.json({ error: "Recipe not found" }, 404);
+  }
+
+  // cache the recipe for 5 minutes
+  await redisClinet.setEx(`recipe:${name}`, 300, JSON.stringify(recipeDb));
+
+  return c.json({ recipe: recipeDb }, 200);
+}
+
+// get all recipe of particular user
+const getAllRecipeByUser = async (c:Context)=>{
+  const userId=c.get("user").id;
+  console.log(userId)
+  // get recipe from cache
+  const cachedRecipe = await redisClinet.get(`recipe:${userId}`);
+  if (cachedRecipe) {
+    console.log("✅ Serving from cache");
+    return c.json({recipes:JSON.parse(cachedRecipe)}, 200);
+  }
+  const recipes = await db.query.recipe.findMany({
+    where:eq(recipe.userId,userId),
+    with:{
+      ingredients:true,
+      createdBy:{
+        columns:{name:true,email:true,avatar:true}
+      }
+    }
+  })
+  // set recipe to cache
+ if(recipes){
+   await redisClinet.setEx(`recipe:${userId}`,300,JSON.stringify(recipes))
+ }
+  if (!recipes) {
+    return c.json({ error: "Recipe not found" }, 404);
+  }
+  return c.json({ recipes }, 200);
+}
+export { 
+  createRecipe, 
+  getAllRecipes,
+  deleteRecipeByID,
+  getRecipeByName,
+  getAllRecipeByUser
+ };

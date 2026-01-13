@@ -3,12 +3,18 @@ import {
   createRecipe,
   getRecipeById,
   getAllRecipes,
+  getRecipeByName,
+  getAllRecipeByUser,
+  deleteRecipeByID,
 } from "../controllers/recipe.controller";
 import { isAuthenticated } from "../middleware/auth.middleware";
 
 const router = new Hono();
 
 router.post("/", isAuthenticated, createRecipe);
-router.get("/:id", getRecipeById);
+router.get("/recipe/:id", getRecipeById);
 router.get("/", getAllRecipes);
+router.get("/search/:name",isAuthenticated, getRecipeByName);
+router.get("/user", isAuthenticated, getAllRecipeByUser);
+router.delete("/recipe/:id",isAuthenticated, deleteRecipeByID);
 export default router;
