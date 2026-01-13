@@ -1,5 +1,26 @@
 # API Documentation
 
+## General Routes
+
+### 1. Welcome Page
+Returns a welcome HTML page for the API.
+
+- **URL**: `GET /`
+- **Response**:
+  - `200 OK`: Returns HTML content (`text/html`).
+
+### 2. Health Check
+Checks if the API is running smoothly.
+
+- **URL**: `GET /api/health`
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Everything run smoothly 😊"
+    }
+    ```
+
 ## User Routes
 Base URL: `/api/users`
 
@@ -187,7 +208,7 @@ Creates a new recipe.
 ### 2. Get Recipe by ID
 Retrieves details of a specific recipe. Redis caching is implemented for performance.
 
-- **URL**: `GET /:id`
+- **URL**: `GET /recipe/:id`
 - **Request Parameters**:
   - `id`: The UUID of the recipe.
 - **Response**:
@@ -235,6 +256,56 @@ Retrieves a paginated list of recipes. Redis caching is implemented for performa
       ]
     }
     ```
+  - `500 Internal Server Error`
+
+### 4. Search Recipe by Name
+Searches for recipes by name (case-insensitive).
+
+- **URL**: `GET /search/:name`
+- **Authentication**: Required
+- **Request Parameters**:
+  - `name`: The name or partial name of the recipe.
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "recipe": { ... }
+    }
+    ```
+  - `404 Not Found`: Recipe not found.
+  - `500 Internal Server Error`
+
+### 5. Get User Recipes
+Retrieves all recipes created by the authenticated user.
+
+- **URL**: `GET /user`
+- **Authentication**: Required
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "recipes": [ ... ]
+    }
+    ```
+  - `404 Not Found`: No recipes found.
+  - `500 Internal Server Error`
+
+### 6. Delete Recipe
+Deletes a recipe by its ID.
+
+- **URL**: `DELETE /recipe/:id`
+- **Authentication**: Required
+- **Request Parameters**:
+  - `id`: The UUID of the recipe to delete.
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Recipe deleted successfully"
+    }
+    ```
+  - `401 Unauthorized`: If the user is not the owner of the recipe.
+  - `404 Not Found`: Recipe not found.
   - `500 Internal Server Error`
 
 ---

@@ -4,20 +4,21 @@ import userRouter from "./routes/user.routes";
 import recipeRouter from "./routes/recipe.routes";
 import uploadRouter from "./routes/upload.routes";
 import redisClinet from "./helper/redis";
+import { welcomeHtmlTemplate } from "./templates/welcome";
 const app = new Hono();
 
 app.use(logger());
 app.get("/", (c) => {
-  return c.text("Hello Hono!");
+  return c.html(welcomeHtmlTemplate);
 });
 app.get("/api/health", (c) => {
-  return c.json({ message: "Everything run smoothly" }, 200);
+  return c.json({ message: "Everything run smoothly 😊" }, 200);
 });
 app.route("/api/users", userRouter);
 app.route("/api/recipes", recipeRouter);
 app.route("/api/upload", uploadRouter);
 app.get("/api/rest-cache", (c : Context)=>{
   redisClinet.flushAll();
-  return c.json({ message: "Rest cache cleared successfully" }, 200);
+  return c.json({ message: "Rest cache cleared successfully 😊" }, 200);
 });
 export default app;
