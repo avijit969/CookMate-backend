@@ -219,8 +219,16 @@ Retrieves details of a specific recipe. Redis caching is implemented for perform
         "id": "uuid",
         "title": "Pasta Carbonara",
         "description": "...",
-        "instructions": "...",
-        "ingredients": [ ... ]
+        "image": "url",
+        "ingredients": [ ... ],
+        "likes": [
+          { "userId": "uuid" }
+        ],
+        "createdBy": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "avatar": "url"
+        }
       }
     }
     ```
@@ -246,12 +254,15 @@ Retrieves a paginated list of recipes. Redis caching is implemented for performa
         {
           "id": "uuid",
           "title": "Pasta Carbonara",
+          "image": "url",
+          "description": "...",
           "createdBy": {
              "name": "John Doe",
-             "email": "john@example.com",
              "avatar": "url"
           },
-          "ingredients": [ ... ]
+          "likes": [
+             { "userId": "uuid" }
+          ]
         }
       ]
     }
@@ -269,7 +280,16 @@ Searches for recipes by name (case-insensitive).
   - `200 OK`:
     ```json
     {
-      "recipe": { ... }
+      "recipe": {
+         "title": "Pasta Carbonara",
+         "image": "url",
+         "description": "...",
+         "createdBy": {
+           "name": "John Doe",
+           "email": "john@example.com",
+           "avatar": "url"
+         }
+      }
     }
     ```
   - `404 Not Found`: Recipe not found.
@@ -284,7 +304,20 @@ Retrieves all recipes created by the authenticated user.
   - `200 OK`:
     ```json
     {
-      "recipes": [ ... ]
+      "recipes": [
+        {
+          "id": "uuid",
+          "title": "Pasta Carbonara",
+          "image": "url",
+          "description": "...",
+          "likesCount": 5,
+          "createdBy": {
+            "name": "John Doe",
+            "email": "john@example.com",
+            "avatar": "url"
+          }
+        }
+      ]
     }
     ```
   - `404 Not Found`: No recipes found.
@@ -488,9 +521,12 @@ Adds a new comment to a recipe.
   - `500 Internal Server Error`
 
 ### 4. Get Recipe Comments
-Retrieves all comments for a specific recipe.
+Retrieves all comments for a specific recipe with pagination.
 
 - **URL**: `GET /comment/:recipeId`
+- **Query Parameters**:
+  - `page` (optional): Page number (default: 1).
+  - `limit` (optional): Number of items per page (default: 10).
 - **Response**:
   - `200 OK`:
     ```json
@@ -499,13 +535,16 @@ Retrieves all comments for a specific recipe.
         {
           "id": "uuid",
           "content": "Great recipe!",
+          "createdAt": "timestamp",
           "user": {
             "name": "Jane Doe",
             "avatar": "url"
-          },
-          "createdAt": "timestamp"
+          }
         }
-      ]
+      ],
+      "total": 15,
+      "hasNextPage": true,
+      "hasPrevPage": false
     }
     ```
   - `500 Internal Server Error`

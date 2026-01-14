@@ -181,6 +181,11 @@ export const getUserSavedRecipes = async (c: Context) => {
         where: eq(save.userId, userId),
         with: {
             recipe: {
+              columns:{
+                id:true,
+                title:true,
+                image:true,
+              },
                 with: {
                     createdBy: {
                         columns: { name: true, avatar: true },
