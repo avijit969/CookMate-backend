@@ -67,9 +67,6 @@ export const save = pgTable("save",{
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
 // ✅ Relations
-export const recipeRelations = relations(recipe, ({ many }) => ({
-  ingredients: many(ingredient),
-}));
 
 export const userRelations = relations(user, ({ many }) => ({
   recipes: many(recipe),
@@ -78,11 +75,15 @@ export const userRelations = relations(user, ({ many }) => ({
   saves: many(save),
 }));
 
-export const recipeRelations2 = relations(recipe, ({ one }) => ({
+export const recipeRelations = relations(recipe, ({ one,many }) => ({
   createdBy: one(user, {
     fields: [recipe.userId],
     references: [user.id],
   }),
+  comments: many(comment),
+  likes: many(like),
+  saves: many(save),
+  ingredients: many(ingredient),
 }));
 
 export const ingredientRelations = relations(ingredient, ({ one }) => ({
@@ -92,12 +93,11 @@ export const ingredientRelations = relations(ingredient, ({ one }) => ({
   }),
 }));
 
-export const logged_in_deviceRelations = relations(logged_in_device,({one,many})=>({
+export const logged_in_deviceRelations = relations(logged_in_device,({one})=>({
   user:one(user,{
     fields:[logged_in_device.userId],
     references:[user.id]
-  }),
-  devices:many(user)
+  })
 }))
 
 export const commentRelations = relations(comment, ({ one,many }) => ({

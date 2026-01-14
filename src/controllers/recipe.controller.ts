@@ -3,7 +3,7 @@ import db from "../db";
 import { ingredient, recipe, user } from "../db/schema";
 import { eq, ilike, like } from "drizzle-orm/sql/expressions/conditions";
 import redisClinet from "../helper/redis";
-import { count } from "drizzle-orm";
+import { count, SQL } from "drizzle-orm";
 
 // create new recipe
 const createRecipe = async (c: Context) => {
@@ -83,8 +83,25 @@ export const getRecipeById = async (c: Context) => {
     // Fetch from DB
     const foundRecipe = await db.query.recipe.findFirst({
       where: eq(recipe.id, id),
+      columns:{
+        title:true,
+        image:true,
+        description:true,
+      },
       with: {
         ingredients: true,
+        likes:{
+          columns:{
+            userId:true
+          }
+        },
+        createdBy:{
+          columns:{
+            name:true,
+            email:true,
+            avatar:true,
+          }
+        },
       },
     });
 
@@ -131,11 +148,19 @@ const getAllRecipes = async (c: Context) => {
 
     // Fetch paginated recipes with relations
     const recipes = await db.query.recipe.findMany({
+      columns:{
+        id:true,
+        title:true,
+        image:true,
+        description:true
+      },
       with: {
-        ingredients: true,
         createdBy: {
-          columns: { name: true, email: true, avatar: true },
+          columns: { name: true, avatar: true },
         },
+        likes:{
+          columns:{userId:true},
+        }
       },
       limit: limitNum,
       offset,
@@ -203,10 +228,15 @@ const getRecipeByName = async (c:Context)=>{
     return c.json(JSON.parse(cachedRecipe), 200);
   }
 
-  const recipeDb = await db.query.recipe.findFirst({
+  const recipeDb = await db.query.recipe
+  .findFirst({
     where: ilike(recipe.title, `%${name}%`),
+    columns:{
+      title:true,
+      image:true,
+      description:true,
+    },
     with: {
-      ingredients: true,
       createdBy: {
         columns: { name: true, email: true, avatar: true },
       },
@@ -238,11 +268,19 @@ const getAllRecipeByUser = async (c:Context)=>{
   }
   const recipes = await db.query.recipe.findMany({
     where:eq(recipe.userId,userId),
+    columns:{
+      id:true,
+      title:true,
+      image:true,
+      description:true,
+    },
     with:{
-      ingredients:true,
       createdBy:{
         columns:{name:true,email:true,avatar:true}
-      }
+      },
+      likes:{
+        columns:{userId:true},
+      },
     }
   })
   // set recipe to cache

@@ -1,7 +1,7 @@
 import { Context } from "hono";
 import db from "../db";
 import { comment, like, save, user } from "../db/schema";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, sql } from "drizzle-orm";
 
 // LIKES 
 // Toggle Like (Like if not liked, Unlike if already liked)
@@ -110,18 +110,31 @@ export const deleteComment = async (c: Context) => {
 export const getRecipeComments = async (c: Context) => {
   try {
     const { recipeId } = c.req.param();
-
+    const { page = "1", limit = "10" } = c.req.query();
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
+    const totalComments = await db.select({count:count()}).from(comment).where(eq(comment.recipeId, recipeId)).execute();
+    const total = Number(totalComments[0]?.count || 0);
     const comments = await db.query.comment.findMany({
       where: eq(comment.recipeId, recipeId),
+      columns:{
+        id:true,
+        content:true,
+        createdAt:true
+      },
       with: {
         user: {
             columns: { name: true, avatar: true },
         },
       },
       orderBy: [desc(comment.createdAt)],
+      limit: limitNum,
+      offset,
     });
-
-    return c.json({ comments }, 200);
+    const hasNextPage = offset + limitNum < total;
+    const hasPrevPage = offset > 0;
+    return c.json({ comments, total, hasNextPage, hasPrevPage }, 200);
   } catch (error: any) {
     return c.json({ message: "Internal Server Error", error: error.message }, 500);
   }
