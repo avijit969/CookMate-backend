@@ -87,6 +87,7 @@ export const getRecipeById = async (c: Context) => {
         title:true,
         image:true,
         description:true,
+        instructions:true,
       },
       with: {
         ingredients: true,
@@ -152,7 +153,8 @@ const getAllRecipes = async (c: Context) => {
         id:true,
         title:true,
         image:true,
-        description:true
+        description:true,
+        createdAt:true
       },
       with: {
         createdBy: {
