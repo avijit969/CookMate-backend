@@ -8,6 +8,7 @@ import {
   getRecipeComments,
   toggleSave,
   getUserSavedRecipes,
+  updateComment,
 } from "../controllers/interaction.controller";
 
 const interactionRouter = new Hono();
@@ -20,7 +21,7 @@ interactionRouter.get("/like/:recipeId", getRecipeLikes);
 interactionRouter.post("/comment", isAuthenticated, addComment);
 interactionRouter.delete("/comment/:commentId", isAuthenticated, deleteComment);
 interactionRouter.get("/comment/:recipeId", getRecipeComments);
-
+interactionRouter.put("/comment/:commentId", isAuthenticated, updateComment);
 // Saves
 interactionRouter.post("/save", isAuthenticated, toggleSave);
 interactionRouter.get("/save", isAuthenticated, getUserSavedRecipes);

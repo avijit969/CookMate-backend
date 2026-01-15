@@ -221,6 +221,7 @@ Retrieves details of a specific recipe. Redis caching is implemented for perform
         "description": "...",
         "image": "url",
         "ingredients": [ ... ],
+        "instructions": "...",
         "likes": [
           { "userId": "uuid" }
         ],
@@ -256,6 +257,7 @@ Retrieves a paginated list of recipes. Redis caching is implemented for performa
           "title": "Pasta Carbonara",
           "image": "url",
           "description": "...",
+          "createdAt":"timestamp",
           "createdBy": {
              "name": "John Doe",
              "avatar": "url"
@@ -549,7 +551,33 @@ Retrieves all comments for a specific recipe with pagination.
     ```
   - `500 Internal Server Error`
 
-### 5. Delete Comment
+### 5. Update Comment
+Update a commnet . by the commnetId 
+- **URL**: `PUT /comment/:commentId`
+- **Authentication**: Required
+- **Body** (JSON):
+  ```json
+  {
+    "content": "Updated comment"
+  }
+  ```
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Comment updated successfully",
+      "comment": {
+        "id": "uuid",
+        "content": "Updated comment",
+        "createdAt": "timestamp"
+      }
+    }
+    ```
+  - `403 Forbidden`: Unauthorized to update.
+  - `404 Not Found`: Comment not found.
+  - `500 Internal Server Error`
+
+### 6. Delete Comment
 Deletes a comment. User must be the owner.
 
 - **URL**: `DELETE /comment/:commentId`

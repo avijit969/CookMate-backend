@@ -79,7 +79,37 @@ export const addComment = async (c: Context) => {
     return c.json({ message: "Internal Server Error", error: error.message }, 500);
   }
 };
+// update comment
+export const updateComment = async (c: Context) => {
+  try {
+    const userId = c.get("user").id;
+    const { commentId } = c.req.param();
+    const { content } = await c.req.json();
 
+    const existingComment = await db.query.comment.findFirst({
+      where: eq(comment.id, commentId),
+    });
+
+    if (!existingComment) {
+      return c.json({ message: "Comment not found" }, 404);
+    }
+
+    if (existingComment.userId !== userId) {
+      return c.json({ message: "Unauthorized to update this comment" }, 403);
+    }
+
+    const updatedComment = await db
+      .update(comment)
+      .set({ content })
+      .where(eq(comment.id, commentId))
+      .returning()
+      .execute();
+
+    return c.json({ message: "Comment updated successfully", comment: updatedComment[0] }, 200);
+  } catch (error: any) {
+    return c.json({ message: "Internal Server Error", error: error.message }, 500);
+  }
+};
 // Delete Comment
 export const deleteComment = async (c: Context) => {
   try {
