@@ -23,9 +23,15 @@ const createRecipe = async (c: Context) => {
     const user = c.get("user");
     const userId = user?.id;
 
+    const formattedInstructions = Array.isArray(instructions)
+      ? instructions
+      : typeof instructions === "string"
+      ? instructions.split("\n").map((line: string) => line.trim()).filter((line: string) => line.length > 0)
+      : [];
+
     const newRecipe = await db
       .insert(recipe)
-      .values({ title, userId, instructions, description ,image })
+      .values({ title, userId, instructions: formattedInstructions, description ,image })
       .returning({
         id: recipe.id,
         title: recipe.title,
@@ -323,9 +329,15 @@ const updateRecipeByID = async (c:Context)=>{
     return c.json({ error: "You are not authorized to update this recipe" }, 401);
   }
 
+  const formattedInstructions = Array.isArray(instructions)
+    ? instructions
+    : typeof instructions === "string"
+    ? instructions.split("\n").map((line: string) => line.trim()).filter((line: string) => line.length > 0)
+    : [];
+
   const updatedRecipe = await db
     .update(recipe)
-    .set({ title, instructions, description , image})
+    .set({ title, instructions: formattedInstructions, description , image})
     .where(eq(recipe.id, id))
     .returning()
     .execute();
