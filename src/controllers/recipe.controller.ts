@@ -355,7 +355,8 @@ const updateRecipeByID = async (c:Context)=>{
     }))
     await db.insert(ingredient).values(recipeIngredients).execute();
   }
-  
+  // reset the recipe cache
+  await redisClinet.del(`recipe:${id}`);
   return c.json({ message: "Recipe updated successfully", recipe: updatedRecipe[0] }, 200);
 }
 
