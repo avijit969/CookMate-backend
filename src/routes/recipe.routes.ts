@@ -6,6 +6,7 @@ import {
   getRecipeByName,
   getAllRecipeByUser,
   deleteRecipeByID,
+  updateRecipeByID,
 } from "../controllers/recipe.controller";
 import { isAuthenticated } from "../middleware/auth.middleware";
 
@@ -16,5 +17,6 @@ router.get("/recipe/:id", getRecipeById);
 router.get("/", getAllRecipes);
 router.get("/search/:name",isAuthenticated, getRecipeByName);
 router.get("/user", isAuthenticated, getAllRecipeByUser);
+router.put("/recipe/:id",isAuthenticated, updateRecipeByID);
 router.delete("/recipe/:id",isAuthenticated, deleteRecipeByID);
 export default router;

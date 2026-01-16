@@ -294,10 +294,64 @@ const getAllRecipeByUser = async (c:Context)=>{
   }
   return c.json({ recipes }, 200);
 }
+
+// update recipe by id
+const updateRecipeByID = async (c:Context)=>{
+  const {id} = c.req.param();
+  const userId = c.get("user").id;
+  
+  const {
+    title,instructions,description,image ,ingredients
+  } =await c.req.json()
+  console.log("ingredients",JSON.stringify(ingredients,null,2))
+  console.log("title",title)
+  console.log("instructions",instructions)
+  console.log("description",description)
+  console.log("image",image)
+  const recipeDb = await db.query.recipe.findFirst({
+    where: eq(recipe.id, id),
+    with: {
+      createdBy: true,
+    },
+  });
+
+  if (!recipeDb) {
+    return c.json({ error: "Recipe not found" }, 404);
+  }
+
+  if (recipeDb?.userId !== userId) {
+    return c.json({ error: "You are not authorized to update this recipe" }, 401);
+  }
+
+  const updatedRecipe = await db
+    .update(recipe)
+    .set({ title, instructions, description , image})
+    .where(eq(recipe.id, id))
+    .returning()
+    .execute();
+
+    // some performance issue but i will improve in latter 
+  await db.delete(ingredient).where(eq(ingredient.recipeId, id)).execute();
+  
+  if(ingredients && ingredients.length > 0){
+    const recipeIngredients = ingredients.map((ing:any)=>({
+      recipeId: id,
+      name: ing.name,
+      type: ing.type,
+      quantity: ing.quantity,
+      unit: ing.unit
+    }))
+    await db.insert(ingredient).values(recipeIngredients).execute();
+  }
+  
+  return c.json({ message: "Recipe updated successfully", recipe: updatedRecipe[0] }, 200);
+}
+
 export { 
   createRecipe, 
   getAllRecipes,
   deleteRecipeByID,
   getRecipeByName,
-  getAllRecipeByUser
+  getAllRecipeByUser,
+  updateRecipeByID
  };

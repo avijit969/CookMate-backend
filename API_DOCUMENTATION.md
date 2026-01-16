@@ -343,6 +343,51 @@ Deletes a recipe by its ID.
   - `404 Not Found`: Recipe not found.
   - `500 Internal Server Error`
 
+### 7. Update Recipe
+Updates an existing recipe. User must be the owner.
+
+- **URL**: `PUT /recipe/:id`
+- **Authentication**: Required
+- **Request Parameters**:
+  - `id`: The UUID of the recipe to update.
+- **Body** (JSON):
+  ```json
+  {
+    "title": "Pasta Carbonara Updated",
+    "description": "Updated description...",
+    "instructions": "Updated instructions...",
+    "image": "https://pub-r2.com/new-image.jpg",
+    "ingredients": [
+      {
+        "name": "Spaghetti",
+        "type": "Grains",
+        "quantity": "500",
+        "unit": "g"
+      }
+    ]
+  }
+  ```
+- **Response**:
+  - `200 OK`:
+    ```json
+    {
+      "message": "Recipe updated successfully",
+      "recipe": {
+        "id": "uuid",
+        "title": "Pasta Carbonara Updated",
+        "userId": "uuid",
+        "instructions": "Updated instructions...",
+        "description": "Updated description...",
+        "image": "https://pub-r2.com/new-image.jpg",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp"
+      }
+    }
+    ```
+  - `401 Unauthorized`: If the user is not the owner of the recipe.
+  - `404 Not Found`: Recipe not found.
+  - `500 Internal Server Error`
+
 ---
 
 ## Upload Routes
